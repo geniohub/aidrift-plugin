@@ -1,4 +1,5 @@
 ---
+name: status
 description: Show the AiDrift score, alert state, and last stable checkpoint for the active session
 ---
 
