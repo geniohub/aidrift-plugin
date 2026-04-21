@@ -1,0 +1,18 @@
+{
+  "name": "aidrift",
+  "version": "0.2.0",
+  "description": "Detect drift in your Claude Code sessions — slash commands and hooks backed by the AiDrift backend; MCP tools coming next.",
+  "author": {
+    "name": "GenioHub",
+    "email": "support@geniohub.com"
+  },
+  "homepage": "https://drift.geniohub.com",
+  "repository": "https://github.com/nephantes/AiDrift",
+  "keywords": [
+    "ai",
+    "drift",
+    "quality",
+    "checkpoint",
+    "observability"
+  ]
+}
