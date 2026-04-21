@@ -62,11 +62,12 @@ Environment variables (optional):
 
 ## Versioning
 
-Plugin version lives in three places that must all move together on every release: `.claude-plugin/plugin.json`, `package.json`, and the marketplace entry in [`aidrift-marketplace`](https://github.com/geniohub/aidrift-marketplace). The `dist/` folder is gitignored in the AiDrift monorepo but is committed to the marketplace repo — it's the distributable artifact users actually install.
+Plugin version lives in two places that must move together on every release: `.claude-plugin/plugin.json` and `package.json`. The built `dist/index.js` is committed here — it's the installable MCP server artifact users actually run after `/plugin install`.
 
 ## Links
 
 - Website: https://drift.geniohub.com
-- Source: https://github.com/nephantes/AiDrift (under `packages/claude-code-plugin/`)
+- Source: https://github.com/geniohub/aidrift-plugin
 - Marketplace: https://github.com/geniohub/aidrift-marketplace
-- VSCode extension (complementary): [GenioHub.aidrift](https://marketplace.visualstudio.com/items?itemName=GenioHub.aidrift)
+- Companion CLI: https://github.com/geniohub/aidrift-cli (`npm i -g @aidrift/cli`)
+- VSCode extension (complementary): [GenioHub.aidrift](https://marketplace.visualstudio.com/items?itemName=GenioHub.aidrift) · source: https://github.com/geniohub/aidrift-vscode
