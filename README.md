@@ -13,11 +13,13 @@ All of it is backed by the [AiDrift](https://drift.geniohub.com) API. You authen
 ```
 /plugin marketplace add geniohub/aidrift-marketplace
 /plugin install aidrift@aidrift-marketplace
+/reload-plugins
 ```
 
+The `/reload-plugins` step (or starting a new Claude Code session) is what actually activates the plugin — skills and MCP tools don't show up until then.
+
 Prerequisites:
-- `drift` CLI on your PATH (`npm i -g @aidrift/cli` or from source).
-- Signed in: `drift auth login`.
+- `drift` CLI on your PATH and signed in (`drift auth login`).
 - `jq` installed (for the hook scripts).
 
 ## What you get
