@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Build MCP server bundle
+        run: npm run build
+
+      - name: Smoke test — MCP server responds to tools/list over stdio
+        run: |
+          cat <<'EOF' | node dist/index.js > /tmp/mcp-out.txt 2>/tmp/mcp-err.txt || true
+          {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}
+          {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+          EOF
+          grep -q '"name":"aidrift_status"' /tmp/mcp-out.txt
+
+      - name: Verify committed dist/index.js is fresh
+        run: |
+          git diff --exit-code dist/index.js || {
+            echo "::error::dist/index.js is out of date — run 'npm run build' and commit the result"
+            exit 1
+          }
