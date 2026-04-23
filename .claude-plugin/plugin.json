@@ -1,6 +1,6 @@
 {
   "name": "aidrift",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Detect drift in your Claude Code sessions — slash commands, hooks, and MCP tools backed by the AiDrift backend.",
   "author": {
     "name": "GenioHub",

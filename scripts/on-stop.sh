@@ -36,15 +36,43 @@ fi
 
 response="$(aidrift_truncate "$response" 4000)"
 
+# Attach start-of-turn git provenance captured by on-user-prompt.sh, when
+# available. Older CLI versions that don't recognise --git-* flags will
+# fail, so we fall back to the no-git call on first-try failure.
+git_args=()
+git_start_file="${state_dir}/pending_git_start"
+if [[ -s "$git_start_file" ]]; then
+  g="$(cat "$git_start_file")"
+  gsha="$(printf '%s' "$g" | jq -r '.sha // empty')"
+  gbranch="$(printf '%s' "$g" | jq -r '.branch // empty')"
+  groot="$(printf '%s' "$g" | jq -r '.root // empty')"
+  gclean="$(printf '%s' "$g" | jq -r '.clean // empty')"
+  [[ -n "$gsha" ]] && git_args+=(--git-sha "$gsha")
+  [[ -n "$gbranch" ]] && git_args+=(--git-branch "$gbranch")
+  [[ -n "$groot" ]] && git_args+=(--git-root "$groot")
+  if [[ "$gclean" == "true" ]]; then
+    git_args+=(--working-tree-clean)
+  elif [[ "$gclean" == "false" ]]; then
+    git_args+=(--working-tree-dirty)
+  fi
+fi
+
 if drift turn add \
     --session "$drift_id" \
     --prompt "$prompt" \
+    --response "$response" \
+    "${git_args[@]}" >/dev/null 2>&1; then
+  aidrift_log "turn add ok claude=$claude_sid drift=$drift_id git=${gsha:0:7}"
+elif [[ ${#git_args[@]} -gt 0 ]] && drift turn add \
+    --session "$drift_id" \
+    --prompt "$prompt" \
     --response "$response" >/dev/null 2>&1; then
-  aidrift_log "turn add ok claude=$claude_sid drift=$drift_id"
+  # CLI is too old for --git-* flags; recorded the turn without provenance.
+  aidrift_log "turn add ok (no git, CLI too old) claude=$claude_sid drift=$drift_id"
 else
   aidrift_log "turn add failed claude=$claude_sid drift=$drift_id"
 fi
 
 # Clear per-turn state so the next UserPromptSubmit starts fresh.
-rm -f "$prompt_file" "$tools_file"
+rm -f "$prompt_file" "$tools_file" "$git_start_file"
 exit 0
