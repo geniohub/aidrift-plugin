@@ -11,7 +11,7 @@ All of it is backed by the [AiDrift](https://drift.geniohub.com) API. You authen
 ## Install
 
 ```
-/plugin marketplace add geniohub/aidrift-marketplace
+/plugin marketplace add geniohub/aidrift-plugins
 /plugin install aidrift@geniohub
 /reload-plugins
 ```
@@ -129,6 +129,6 @@ Plugin version lives in two places that must move together on every release: `.c
 
 - Website: https://drift.geniohub.com
 - Source: https://github.com/geniohub/aidrift-plugin
-- Marketplace: https://github.com/geniohub/aidrift-marketplace
+- Marketplace: https://github.com/geniohub/aidrift-plugins
 - Companion CLI: https://github.com/geniohub/aidrift-cli (`npm i -g @aidrift/cli`)
 - VSCode extension (complementary): [GenioHub.aidrift](https://marketplace.visualstudio.com/items?itemName=GenioHub.aidrift) · source: https://github.com/geniohub/aidrift-vscode
