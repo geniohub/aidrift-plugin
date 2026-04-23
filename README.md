@@ -12,7 +12,7 @@ All of it is backed by the [AiDrift](https://drift.geniohub.com) API. You authen
 
 ```
 /plugin marketplace add geniohub/aidrift-marketplace
-/plugin install aidrift@aidrift-marketplace
+/plugin install aidrift@geniohub
 /reload-plugins
 ```
 
