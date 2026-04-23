@@ -47,4 +47,56 @@ esac
 
 printf '%s\n' "$summary" >> "${state_dir}/pending_tools"
 aidrift_log "tool claude=$claude_sid $summary"
+
+# Best-effort GitEvent recording for `git commit` / `git push` run via Bash.
+# Makes Claude Code-driven commits visible to the server even when no VSCode
+# watcher is active. Silent on any failure — never breaks the hook.
+if [[ "$tool" == "Bash" ]]; then
+  bash_cmd="$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')"
+  cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty')"
+  drift_id=""
+  [[ -s "${state_dir}/drift_id" ]] && drift_id="$(cat "${state_dir}/drift_id")"
+
+  # Identify the event type from the command. Skip obvious no-ops.
+  git_event_type=""
+  # Trim leading whitespace; handle `cd X && git commit ...` by picking the
+  # last git subcommand. Crude but catches the common shapes.
+  last_git_cmd="$(printf '%s' "$bash_cmd" | awk '{ for (i=1;i<=NF;i++) if ($i=="git") { s=""; for (j=i; j<=NF; j++) s=s $j " "; print s } }' | tail -1)"
+  if [[ "$last_git_cmd" == *"git commit"* && "$last_git_cmd" != *"--dry-run"* && "$last_git_cmd" != *" -n "* ]]; then
+    git_event_type="commit"
+  elif [[ "$last_git_cmd" == *"git push"* && "$last_git_cmd" != *"--dry-run"* ]]; then
+    git_event_type="push"
+  fi
+
+  if [[ -n "$git_event_type" && -n "$drift_id" && -n "$cwd" ]]; then
+    sha="$(git -C "$cwd" rev-parse HEAD 2>/dev/null || true)"
+    branch="$(git -C "$cwd" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    # Extract remote for push: `git push <remote>` — first non-flag token after push.
+    remote=""
+    if [[ "$git_event_type" == "push" ]]; then
+      remote="$(printf '%s' "$last_git_cmd" | awk '{
+        for (i=1; i<=NF; i++) if ($i=="push") {
+          for (j=i+1; j<=NF; j++) {
+            if ($j ~ /^-/) continue
+            print $j
+            exit
+          }
+        }
+      }')"
+    fi
+
+    args=(git-event record --session "$drift_id" --type "$git_event_type" --ai)
+    [[ -n "$sha" ]] && args+=(--sha "$sha")
+    [[ -n "$branch" ]] && args+=(--branch "$branch")
+    [[ -n "$remote" ]] && args+=(--remote "$remote")
+    # The subject auto-reads inside the CLI when sha is known for commit type.
+
+    if drift "${args[@]}" >/dev/null 2>&1; then
+      aidrift_log "git-event $git_event_type sha=${sha:0:7} drift=$drift_id"
+    else
+      aidrift_log "git-event $git_event_type FAILED drift=$drift_id"
+    fi
+  fi
+fi
+
 exit 0

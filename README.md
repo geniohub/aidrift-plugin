@@ -82,7 +82,7 @@ Grouped by purpose. All commands are safe to invoke mid-session — they read st
 |---|---|
 | `UserPromptSubmit` | Ensures an AiDrift session exists for the current workspace, captures your prompt as the pending turn's input. |
 | `PreToolUse` (Write / Edit / MultiEdit / NotebookEdit) | Enforces the scope lock from `<workspace>/.aidrift/scope`. Warn mode by default; set `AIDRIFT_SCOPE_ENFORCE=strict` to block. |
-| `PostToolUse` (Write / Edit / MultiEdit / Bash / NotebookEdit) | Appends a short tool-activity line to the pending turn. |
+| `PostToolUse` (Write / Edit / MultiEdit / Bash / NotebookEdit) | Appends a short tool-activity line to the pending turn. For Bash `git commit` and `git push` it also records a `GitEvent` so Claude-driven commits are visible server-side without needing the VSCode extension to be running. Requires `@aidrift/cli ≥ 0.1.1`. |
 | `Stop` | Flushes the captured turn (`drift turn add`) once Claude finishes responding. |
 
 All hooks are **non-blocking by default** — if `drift` isn't on PATH, isn't authed, or errors out, the hook silently skips and your Claude Code session continues uninterrupted. The PreToolUse scope hook only blocks when `AIDRIFT_SCOPE_ENFORCE=strict` is set. Debug log at `${CLAUDE_PLUGIN_DATA}/plugin.log`.
