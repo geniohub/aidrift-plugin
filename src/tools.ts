@@ -64,6 +64,14 @@ interface StatusDto {
     scoreAtCheckpoint: number;
     createdAt: string;
   } | null;
+  // Parent sessions only. Empty for leaf sessions or sessions with no
+  // recorded sub-agent overlaps. Each entry is the max per-pair score
+  // across all overlap kinds (file/grep/glob/purpose).
+  overlaps?: Array<{
+    childAId: string;
+    childBId: string;
+    score: number;
+  }>;
 }
 
 interface CheckpointDto {
