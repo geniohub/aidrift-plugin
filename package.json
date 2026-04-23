@@ -1,6 +1,6 @@
 {
   "name": "@aidrift/claude-code-plugin",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "description": "AiDrift Claude Code plugin — slash commands, hooks, and MCP server that surface drift state inside Claude Code sessions",
   "type": "module",
