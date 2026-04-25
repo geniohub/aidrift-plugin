@@ -82,6 +82,7 @@ Grouped by purpose. All commands are safe to invoke mid-session — they read st
 |---|---|
 | `UserPromptSubmit` | Ensures an AiDrift session exists for the current workspace, captures your prompt as the pending turn's input, snapshots git state (HEAD sha, branch, working-tree clean/dirty), and runs a client-side secret scan that redacts known credential patterns (AWS / GitHub PAT / OpenAI / Anthropic / Slack / Stripe / Google / PEM / JWT) before anything is stored or sent. |
 | `PreToolUse` (Write / Edit / MultiEdit / NotebookEdit) | Enforces the scope lock from `<workspace>/.aidrift/scope`. Warn mode by default; set `AIDRIFT_SCOPE_ENFORCE=strict` to block. |
+| `PreToolUse` (Bash → `git commit`) | Drift + secret gate. Scans `git diff --cached` through `_secret_scan.sh` and consults `drift status` for `scopeDistance` / `focalShift` / active alerts. Fires when any of: secret findings > 0, `scopeDistance > 3`, `focalShift > 0.6`, or session alert active. Mode via `AIDRIFT_COMMIT_GATE=warn` (default; print to stderr, allow) / `block` (exit 2, abort) / `off` (skip). The scan runs only on `git commit` invocations; all other Bash commands exit immediately. |
 | `PostToolUse` (Write / Edit / MultiEdit / Bash / NotebookEdit) | Appends a short tool-activity line to the pending turn (also secret-scanned + redacted). For Bash `git commit` and `git push` it also records a `GitEvent` so Claude-driven commits are visible server-side without needing the VSCode extension to be running. Requires `@aidrift/cli ≥ 0.1.1`. |
 | `Stop` | Flushes the captured turn (`drift turn add`) once Claude finishes responding, attaching the start-of-turn git provenance captured by `UserPromptSubmit`. If the secret scanner caught any patterns during the turn, prints a one-line `⚠ AiDrift redacted N potential secret(s)` summary so you see what was filtered. |
 
@@ -121,6 +122,7 @@ Environment variables (optional):
 | `AIDRIFT_API_URL` | Override API host (default `https://drift.geniohub.com/api`). |
 | `AIDRIFT_PROFILE` | Use a non-default profile from `~/.drift/profiles.json`. |
 | `AIDRIFT_SECRET_SCAN` | `on` (default) / `off`. Disable client-side secret redaction in hooks. |
+| `AIDRIFT_COMMIT_GATE` | `warn` (default) / `block` / `off`. Behavior of the pre-commit drift + secret gate. `block` aborts the commit (exit 2 from the hook) when any trigger fires. |
 
 ## Versioning
 
