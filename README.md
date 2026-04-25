@@ -80,10 +80,10 @@ Grouped by purpose. All commands are safe to invoke mid-session — they read st
 
 | Event | Behavior |
 |---|---|
-| `UserPromptSubmit` | Ensures an AiDrift session exists for the current workspace, captures your prompt as the pending turn's input, and snapshots git state (HEAD sha, branch, working-tree clean/dirty) to attach to the recorded turn. |
+| `UserPromptSubmit` | Ensures an AiDrift session exists for the current workspace, captures your prompt as the pending turn's input, snapshots git state (HEAD sha, branch, working-tree clean/dirty), and runs a client-side secret scan that redacts known credential patterns (AWS / GitHub PAT / OpenAI / Anthropic / Slack / Stripe / Google / PEM / JWT) before anything is stored or sent. |
 | `PreToolUse` (Write / Edit / MultiEdit / NotebookEdit) | Enforces the scope lock from `<workspace>/.aidrift/scope`. Warn mode by default; set `AIDRIFT_SCOPE_ENFORCE=strict` to block. |
-| `PostToolUse` (Write / Edit / MultiEdit / Bash / NotebookEdit) | Appends a short tool-activity line to the pending turn. For Bash `git commit` and `git push` it also records a `GitEvent` so Claude-driven commits are visible server-side without needing the VSCode extension to be running. Requires `@aidrift/cli ≥ 0.1.1`. |
-| `Stop` | Flushes the captured turn (`drift turn add`) once Claude finishes responding, attaching the start-of-turn git provenance captured by `UserPromptSubmit`. |
+| `PostToolUse` (Write / Edit / MultiEdit / Bash / NotebookEdit) | Appends a short tool-activity line to the pending turn (also secret-scanned + redacted). For Bash `git commit` and `git push` it also records a `GitEvent` so Claude-driven commits are visible server-side without needing the VSCode extension to be running. Requires `@aidrift/cli ≥ 0.1.1`. |
+| `Stop` | Flushes the captured turn (`drift turn add`) once Claude finishes responding, attaching the start-of-turn git provenance captured by `UserPromptSubmit`. If the secret scanner caught any patterns during the turn, prints a one-line `⚠ AiDrift redacted N potential secret(s)` summary so you see what was filtered. |
 
 All hooks are **non-blocking by default** — if `drift` isn't on PATH, isn't authed, or errors out, the hook silently skips and your Claude Code session continues uninterrupted. The PreToolUse scope hook only blocks when `AIDRIFT_SCOPE_ENFORCE=strict` is set. Debug log at `${CLAUDE_PLUGIN_DATA}/plugin.log`.
 
@@ -120,6 +120,7 @@ Environment variables (optional):
 |---|---|
 | `AIDRIFT_API_URL` | Override API host (default `https://drift.geniohub.com/api`). |
 | `AIDRIFT_PROFILE` | Use a non-default profile from `~/.drift/profiles.json`. |
+| `AIDRIFT_SECRET_SCAN` | `on` (default) / `off`. Disable client-side secret redaction in hooks. |
 
 ## Versioning
 

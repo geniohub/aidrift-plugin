@@ -21,6 +21,15 @@ if [[ -z "$claude_sid" || -z "$cwd" ]]; then
   exit 0
 fi
 
+# Client-side secret scan. Redact before anything is stored or sent.
+# Findings accumulate in the per-session state dir for the Stop hook to
+# summarise. Disable with AIDRIFT_SECRET_SCAN=off (defaults to on).
+state_dir_pre="$(aidrift_state_dir "$claude_sid")"
+findings_file_pre="${state_dir_pre}/secret_findings.jsonl"
+if [[ "${AIDRIFT_SECRET_SCAN:-on}" != "off" ]]; then
+  prompt="$(printf '%s' "$prompt" | "${SCRIPT_DIR}/_secret_scan.sh" "$findings_file_pre")"
+fi
+
 # First prompt of a session becomes the drift task description.
 task="$(aidrift_truncate "$prompt" 200)"
 
@@ -29,7 +38,7 @@ if [[ -z "$drift_id" ]]; then
   exit 0
 fi
 
-state_dir="$(aidrift_state_dir "$claude_sid")"
+state_dir="$state_dir_pre"
 printf '%s' "$drift_id" > "${state_dir}/drift_id"
 printf '%s' "$prompt" > "${state_dir}/pending_prompt"
 # Reset tools log for the new turn.

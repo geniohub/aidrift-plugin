@@ -73,6 +73,20 @@ else
   aidrift_log "turn add failed claude=$claude_sid drift=$drift_id"
 fi
 
+# Surface a one-line summary of any secret findings accumulated during
+# this turn, then clear the file. The findings themselves don't go to the
+# server in this slice (Phase 3a) — server persistence ships in Phase 3b.
+findings_file="${state_dir}/secret_findings.jsonl"
+if [[ -s "$findings_file" ]]; then
+  finding_count="$(wc -l < "$findings_file" | tr -d ' ')"
+  pattern_summary="$(awk -F'"' '/"pattern"/ { for (i=1;i<=NF;i++) if ($i=="pattern") print $(i+2) }' "$findings_file" | sort | uniq -c | awk '{ printf "%s×%s ", $2, $1 }')"
+  warning="⚠ AiDrift redacted ${finding_count} potential secret(s) from this turn before recording it [${pattern_summary}]"
+  aidrift_log "$warning claude=$claude_sid drift=$drift_id"
+  # Stdout from Stop hook is captured by Claude Code; it makes the
+  # warning visible without breaking the session.
+  printf '%s\n' "$warning"
+fi
+
 # Clear per-turn state so the next UserPromptSubmit starts fresh.
-rm -f "$prompt_file" "$tools_file" "$git_start_file"
+rm -f "$prompt_file" "$tools_file" "$git_start_file" "$findings_file"
 exit 0
