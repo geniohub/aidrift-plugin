@@ -13,6 +13,10 @@
 set -u
 
 findings_file="${1:-/dev/null}"
+# Optional: where the scanned text came from. Stamped onto each finding
+# JSON line so the server can attribute findings to prompt vs tool output
+# vs staged diff vs commit subject.
+location="${2:-unknown}"
 
 # Read all of stdin into a variable. Hook payloads are bounded (prompt
 # truncated to 200 chars in on-user-prompt; tool summaries to 160; turn
@@ -61,10 +65,10 @@ for entry in "${patterns[@]}"; do
     # metacharacters, so `${var//literal/repl}` is safe here.
     redacted="${redacted//$match/[REDACTED:$name]}"
     if command -v jq >/dev/null 2>&1; then
-      jq -cn --arg p "$name" --arg pr "$preview" \
-        '{pattern: $p, preview: $pr}' >> "$findings_file" 2>/dev/null || true
+      jq -cn --arg p "$name" --arg pr "$preview" --arg loc "$location" \
+        '{pattern: $p, preview: $pr, location: $loc}' >> "$findings_file" 2>/dev/null || true
     else
-      printf '{"pattern":"%s","preview":"%s"}\n' "$name" "$preview" \
+      printf '{"pattern":"%s","preview":"%s","location":"%s"}\n' "$name" "$preview" "$location" \
         >> "$findings_file" 2>/dev/null || true
     fi
   done <<< "$matches"

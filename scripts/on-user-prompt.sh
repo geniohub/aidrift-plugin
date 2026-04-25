@@ -27,7 +27,7 @@ fi
 state_dir_pre="$(aidrift_state_dir "$claude_sid")"
 findings_file_pre="${state_dir_pre}/secret_findings.jsonl"
 if [[ "${AIDRIFT_SECRET_SCAN:-on}" != "off" ]]; then
-  prompt="$(printf '%s' "$prompt" | "${SCRIPT_DIR}/_secret_scan.sh" "$findings_file_pre")"
+  prompt="$(printf '%s' "$prompt" | "${SCRIPT_DIR}/_secret_scan.sh" "$findings_file_pre" prompt)"
 fi
 
 # First prompt of a session becomes the drift task description.

@@ -74,8 +74,7 @@ else
 fi
 
 # Surface a one-line summary of any secret findings accumulated during
-# this turn, then clear the file. The findings themselves don't go to the
-# server in this slice (Phase 3a) — server persistence ships in Phase 3b.
+# this turn, forward them to the server (Phase 3b), and clear the file.
 findings_file="${state_dir}/secret_findings.jsonl"
 if [[ -s "$findings_file" ]]; then
   finding_count="$(wc -l < "$findings_file" | tr -d ' ')"
@@ -85,6 +84,19 @@ if [[ -s "$findings_file" ]]; then
   # Stdout from Stop hook is captured by Claude Code; it makes the
   # warning visible without breaking the session.
   printf '%s\n' "$warning"
+
+  # Forward findings to the server. Best-effort: silent skip if CLI is
+  # too old (no `secret-finding` subcommand) or any error. We don't
+  # block the hook on this — the user-visible warning above already
+  # delivered the safety value locally.
+  if drift secret-finding record \
+      --session "$drift_id" \
+      --jsonl "$findings_file" \
+      --quiet >/dev/null 2>&1; then
+    aidrift_log "secret-finding record ok ($finding_count) claude=$claude_sid"
+  else
+    aidrift_log "secret-finding record skipped (CLI too old or error) claude=$claude_sid"
+  fi
 fi
 
 # Clear per-turn state so the next UserPromptSubmit starts fresh.

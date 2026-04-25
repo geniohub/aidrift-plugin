@@ -48,7 +48,7 @@ esac
 # Redact secret patterns from the tool summary before it's persisted.
 # Findings file is shared with on-user-prompt and read by on-stop.
 if [[ "${AIDRIFT_SECRET_SCAN:-on}" != "off" ]]; then
-  summary="$(printf '%s' "$summary" | "${SCRIPT_DIR}/_secret_scan.sh" "${state_dir}/secret_findings.jsonl")"
+  summary="$(printf '%s' "$summary" | "${SCRIPT_DIR}/_secret_scan.sh" "${state_dir}/secret_findings.jsonl" tool-output)"
 fi
 
 printf '%s\n' "$summary" >> "${state_dir}/pending_tools"
